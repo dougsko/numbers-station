@@ -1,7 +1,8 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
 describe "NumbersStation" do
-  it "fails" do
-    fail "hey buddy, you should probably rename this file and start specing for real"
-  end
+	it "encodes and decodes strings" do
+		e = NumbersStation.new
+		e.decode(e.encode('my name is doug. i am 6900 years old')).should match("MYNAMEISDOUG.IAM6900YEARSOLD")
+	end
 end
