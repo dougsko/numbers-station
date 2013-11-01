@@ -1,4 +1,4 @@
-Number Station
+Numbers Station
 ==================
 
 This package contains libraries and tools to do the following things:
