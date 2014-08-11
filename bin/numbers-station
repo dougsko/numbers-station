@@ -1,0 +1,127 @@
+#!/usr/bin/env ruby
+
+
+require 'highline/import'
+require './lib/numbers-station'
+require './lib/otp_manager'
+require './lib/otp'
+
+class NS
+    def initialize
+        @choice
+        @current_menu
+        @prev_menu
+        @otp_manager = OTPManager.new
+        @otps_file
+        @otp
+        @ns = NumbersStation.new
+    end
+
+    # initial menu
+    def start_menu
+        puts
+        choose do |menu|
+            say("<%= color('What would you like to do?', :bold) %>")
+
+            menu.choice("Encrypt a message") do
+                encrypt_menu_1
+            end
+            menu.choice("Decrypt a message") do
+                decrypt_menu_1
+            end
+            menu.choice("Create an OTP") do
+                create_otp_menu_1
+            end
+            menu.choice("Print OTP") do
+                select_otp_menu
+                say("<%= color('-'*50, [ :bold, :white, :on_blue]) %>")
+                @otp.print
+                puts
+                say("<%= color('-'*50, [ :bold, :white, :on_blue]) %>")
+                start_menu
+            end
+            menu.choice("Quit") do
+                say("<%= color('Goodbye!', :green) %>")
+                exit
+            end
+        end
+    end
+
+    def select_otps_file_menu
+        puts
+        path = ask("<%= color('Choose a file:', :bold) %>"){|q| q.default = "#{ENV['HOME']}/.otps" }
+        @otps_file = path
+    end
+
+
+
+    def select_otp_menu
+        ids = []
+        chosen_id = ""
+        select_otps_file_menu
+        puts
+        otps = @otp_manager.load(@otps_file)
+        choose do |menu|
+            say("<%= color('Select an ID:', :bold) %>")
+            otps.each do |otp|
+                menu.choice(otp.id) do |choice| 
+                    chosen_id = choice
+                end
+            end
+        end
+        otps.each do |otp|
+            if(otp.id == chosen_id)
+                @otp = otp
+            end
+        end
+    end
+
+    def encrypt_menu_1
+        encrypted = []
+        select_otp_menu
+        puts
+        plaintext = ask("<%= color('Enter plaintext: ', :bold) %>")
+        encoded = @ns.encode(plaintext)
+        encoded_a = encoded.split('').collect{|c| c.to_i}
+        if(@otp.pad.size < encoded_a.size)
+            say("<%= color('Sorry, your OTP does not have enough data to encrypt your message.', :red) %>")
+            start_menu
+        end
+        encoded_a.each_with_index do |e, i|
+            encrypted << @ns.encrypt(e, @otp.pad[i])
+        end
+        say("<%= color('Encrypted message: ', :green) %>")
+        say("<%= color('#{encrypted.join('')}', :bold) %>")
+    end
+
+    def decrypt_menu_1
+        decrypted = []
+        select_otp_menu
+        ciphertext = ask("Enter ciphertext: ")
+        ciphertext.split('').each_with_index do |c, i|
+            decrypted << @ns.decrypt(c.to_i, @otp.pad[i])
+        end
+        decoded = @ns.decode(decrypted.join(''))
+        say("<%= color('Decrypted message: ', GREEN) %>")
+        say("<%= color('#{decoded}', BOLD) %>")
+
+    end
+
+    def create_otp_menu_1
+       otp = Otp.new 
+       say("New one time pad created. Where do you want to save it?")
+       path = ask("Path: "){|q| q.default = "#{ENV['HOME']}/.otps" } 
+       @otp_manager.write(otp, path)
+       say("<%= color('OTP Saved!', GREEN) %>")
+       start_menu
+    end
+
+    def print_header
+        say("<%= color('Numbers Station', [ :bold, :white, :on_blue]) %>")
+        say("<%= color('Broadcast quietly...', :blue) %>")
+    end
+end
+
+ns = NS.new
+ns.print_header
+ns.start_menu
