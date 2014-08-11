@@ -97,6 +97,7 @@ class NS
     def decrypt_menu_1
         decrypted = []
         select_otp_menu
+        puts
         ciphertext = ask("Enter ciphertext: ")
         ciphertext.split('').each_with_index do |c, i|
             decrypted << @ns.decrypt(c.to_i, @otp.pad[i])
