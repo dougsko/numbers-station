@@ -58,6 +58,7 @@ Select an ID:
 2. 019d98d2-5463-4b11-ac73-4ced60fa6c94
 3. 21f55a5c-baef-4f6e-aa97-682df8d05928
 ?  1
+
 Enter ciphertext: 9938858035745522
 Decrypted message: HELLOWORLD
 ```
