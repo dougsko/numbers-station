@@ -13,14 +13,26 @@ class OTPManager
     end
 
     def load(file)
-        YAML.load_file(file)
+        if(File.exists?(file))
+            YAML.load_file(file)
+        end
     end
 
-    def write(otp, file)
+    def write(my_otp, file)
+        updated = false
         if(File.exists?(file))
             @otps = self.load(file)
         end
-        @otps << otp
+        @otps.each_with_index do |otp, i|
+            if(otp.id == my_otp.id)
+                @otps[i] = my_otp
+                updated = true
+            end
+        end
+        if(updated == false)
+            puts "new otp"
+            @otps << my_otp
+        end
         File.open(file, 'w') do |f|
             f.puts YAML.dump(@otps)
         end

@@ -37,11 +37,14 @@ class NS
                 say("<%= color('-'*50, [ :bold, :white, :on_blue]) %>")
                 @otp.print
                 puts
+                say("<%= color('Remaining size: ', :bold) %>" + @otp.pad.size.to_s)
+                puts
                 say("<%= color('-'*50, [ :bold, :white, :on_blue]) %>")
                 start_menu
             end
             menu.choice("Quit") do
-                say("<%= color('Goodbye!', :green) %>")
+                puts
+                say("<%= color('Goodbye!', [:green, :bold]) %>")
                 exit
             end
         end
@@ -50,7 +53,13 @@ class NS
     def select_otps_file_menu
         puts
         path = ask("<%= color('Choose a file:', :bold) %>"){|q| q.default = "#{ENV['HOME']}/.otps" }
-        @otps_file = path
+        if(File.exists?(path))
+            @otps_file = path
+            @otps = @otp_manager.load(@otps_file)
+        else
+            say("<%= color('File does not exist, choose another.', [:yellow, :bold]) %>")
+            select_otps_file_menu
+        end
     end
 
 
@@ -60,16 +69,15 @@ class NS
         chosen_id = ""
         select_otps_file_menu
         puts
-        otps = @otp_manager.load(@otps_file)
         choose do |menu|
             say("<%= color('Select an ID:', :bold) %>")
-            otps.each do |otp|
+            @otps.each do |otp|
                 menu.choice(otp.id) do |choice| 
                     chosen_id = choice
                 end
             end
         end
-        otps.each do |otp|
+        @otps.each do |otp|
             if(otp.id == chosen_id)
                 @otp = otp
             end
@@ -89,9 +97,12 @@ class NS
         end
         encoded_a.each_with_index do |e, i|
             encrypted << @ns.encrypt(e, @otp.pad[i])
+            @otp.pad.delete_at(i)
         end
+        @otp_manager.write(@otp, @otps_file)
         say("<%= color('Encrypted message: ', :green) %>")
         say("<%= color('#{encrypted.join('')}', :bold) %>")
+        start_menu
     end
 
     def decrypt_menu_1
@@ -101,11 +112,13 @@ class NS
         ciphertext = ask("Enter ciphertext: ")
         ciphertext.split('').each_with_index do |c, i|
             decrypted << @ns.decrypt(c.to_i, @otp.pad[i])
+            @otp.pad.delete_at(i)
         end
+        @otp_manager.write(@otp, @otps_file)
         decoded = @ns.decode(decrypted.join(''))
-        say("<%= color('Decrypted message: ', GREEN) %>")
-        say("<%= color('#{decoded}', BOLD) %>")
-
+        say("<%= color('Decrypted message: ', :green) %>")
+        say("<%= color('#{decoded}', :bold) %>")
+        start_menu
     end
 
     def create_otp_menu_1
@@ -113,13 +126,13 @@ class NS
        say("New one time pad created. Where do you want to save it?")
        path = ask("Path: "){|q| q.default = "#{ENV['HOME']}/.otps" } 
        @otp_manager.write(otp, path)
-       say("<%= color('OTP Saved!', GREEN) %>")
+       say("<%= color('OTP Saved!', :green) %>")
        start_menu
     end
 
     def print_header
         say("<%= color('Numbers Station', [ :bold, :white, :on_blue]) %>")
-        say("<%= color('Broadcast quietly...', :blue) %>")
+        say("<%= color('Go ahead, let them listen...', :blue) %>")
     end
 end
 
