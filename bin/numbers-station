@@ -95,9 +95,8 @@ class NS
             say("<%= color('Sorry, your OTP does not have enough data to encrypt your message.', :red) %>")
             start_menu
         end
-        encoded_a.each_with_index do |e, i|
-            encrypted << @ns.encrypt(e, @otp.pad[i])
-            @otp.pad.delete_at(i)
+        encoded_a.each do |e|
+            encrypted << @ns.encrypt(e, @otp.pad.shift)
         end
         @otp_manager.write(@otp, @otps_file)
         say("<%= color('Encrypted message: ', :green) %>")
@@ -110,9 +109,8 @@ class NS
         select_otp_menu
         puts
         ciphertext = ask("Enter ciphertext: ")
-        ciphertext.split('').each_with_index do |c, i|
-            decrypted << @ns.decrypt(c.to_i, @otp.pad[i])
-            @otp.pad.delete_at(i)
+        ciphertext.split('').each do |c|
+            decrypted << @ns.decrypt(c.to_i, @otp.pad.shift)
         end
         @otp_manager.write(@otp, @otps_file)
         decoded = @ns.decode(decrypted.join(''))
